@@ -1,0 +1,42 @@
+server:
+  port: 9090
+
+spring:
+  application:
+    name: API-GATEWAY
+  cloud:
+    gateway:
+      routes:
+        - id: SPEAKER-SERVICE
+          uri: lb://SPEAKER-SERVICE
+          predicates:
+            - Path=/speakers/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: SPEAKER-SERVICE
+                fallbackuri: forward:/speakerFallback
+        - id: SESSION-SERVICE
+          uri: lb://SESSION-SERVICE
+          predicates:
+            - Path=/sessions/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: SESSION-SERVICE
+                fallbackuri: forward:/sessionFallback
+
+hystrix:
+  command:
+    fallbackcmd:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 5000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+      base-path: "/"
